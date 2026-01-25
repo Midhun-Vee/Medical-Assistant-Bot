@@ -1,3 +1,12 @@
-datasets_pmc
+# folders
+
+# datasets
+datasets
+
+# others
 __pycache__
+env
+.venv
+
+# files
 .env
