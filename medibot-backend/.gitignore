@@ -1,7 +1,7 @@
 # folders
 
 # datasets
-datasets
+preprocessing/datasets
 
 # others
 __pycache__
@@ -10,3 +10,6 @@ env
 
 # files
 .env
+
+# database
+chroma_db
