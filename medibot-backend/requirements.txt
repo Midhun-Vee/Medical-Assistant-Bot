@@ -1,4 +1,9 @@
 langchain-core
 langchain-openai
 langchain-community
+langchain-experimental
 langgraph
+pandas
+langchain-chroma
+python-dotenv
+chromadb
