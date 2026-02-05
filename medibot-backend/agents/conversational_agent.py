@@ -15,12 +15,11 @@ llm = ChatOpenAI(
 )
 
 
+# ConversationChain only allows {history} and {input} in the prompt.
+# Context is embedded directly into {input} at call time.
 prompt = PromptTemplate.from_template(
     """
 You are a healthcare conversational assistant.
-
-Use the specialist information below to answer
-the user's question.
 
 Be clear and patient-friendly.
 
@@ -33,12 +32,6 @@ Do not:
 Conversation history:
 
 {history}
-
-Specialist information:
-
-{context}
-
-User question:
 
 {input}
 
@@ -87,35 +80,30 @@ def conversational_agent(state):
     if state.get("prescription_info"):
 
         context += "\nPrescription information:\n"
-
-        context += state[
-            "prescription_info"
-        ]
+        context += state["prescription_info"]
 
     if state.get("disease_analysis"):
 
         context += "\nDisease analysis:\n"
-
-        context += state[
-            "disease_analysis"
-        ]
+        context += state["disease_analysis"]
 
     if state.get("report_summary"):
 
         context += "\nReport summary:\n"
+        context += state["report_summary"]
 
-        context += state[
-            "report_summary"
-        ]
+    # Embed context into input so ConversationChain sees only {history} + {input}
+    if context:
+        combined_input = (
+            f"Specialist information:\n{context}\n\nUser question:\n{state['question']}"
+        )
+    else:
+        combined_input = state["question"]
 
-    response = chain.invoke({
-        "input": state["question"],
-        "context": context
-    })
+    response = chain.invoke({"input": combined_input})
 
     state["answer"] = (
         response.get("response")
-        or response.get("output")
         or "I'm sorry, I was unable to generate a response. Please try again."
     )
 

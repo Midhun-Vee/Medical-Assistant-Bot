@@ -2,6 +2,7 @@
 
 # datasets
 preprocessing/datasets
+datasets_pmc.zip
 
 # others
 __pycache__
