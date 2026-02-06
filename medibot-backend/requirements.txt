@@ -7,3 +7,4 @@ pandas
 langchain-chroma
 python-dotenv
 chromadb
+streamlit
