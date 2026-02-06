@@ -62,6 +62,8 @@ def get_chain(chat_id):
 
 def conversational_agent(state):
 
+    print(f"\n\nconversational\n\n")
+
     chain = get_chain(
         state["chat_id"]
     )
