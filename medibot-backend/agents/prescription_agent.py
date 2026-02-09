@@ -1,33 +1,31 @@
+import os
+
 from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
-
-
-# --------------------------------------------------
-# Internet search
-# --------------------------------------------------
-
-search = TavilySearchResults(
-    max_results=5
-)
-
+from openai import OpenAI
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0
 )
 
+tavily_search = None
 
-def prescription_agent(state):
+if os.getenv("TAVILY_API_KEY"):
+    tavily_search = TavilySearchResults(
+        max_results=5
+    )
 
-    question = state["question"]
+# * fallback if tavily fails
+openai_client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
-    # --------------------------------------------------
-    # Search authoritative medication sources first
-    # --------------------------------------------------
+def web_search(question):
 
     search_query = f"""
     {question}
-
+    
     Find official medication information including:
     - generic and brand name
     - indications
@@ -36,7 +34,7 @@ def prescription_agent(state):
     - contraindications
     - side effects
     - drug interactions
-
+    
     Prefer authoritative sources such as:
     FDA
     DailyMed
@@ -44,29 +42,58 @@ def prescription_agent(state):
     official government health organizations
     """
 
-    results = search.invoke(search_query)
+    if tavily_search is not None:
+        results = tavily_search.invoke(search_query)
 
-    # --------------------------------------------------
-    # Convert search results into context
-    # --------------------------------------------------
+        context = "\n\n".join(
+                    result.get("content", "")
+                    for result in results
+                    if result.get("content")
+                )
+        
+        return context, results
 
-    context = "\n\n".join(
-        result["content"]
-        for result in results
-        if result.get("content")
-    )
+    else:
+        print(f"\n\ntavily failed\ninvoked backup openai\n\n")
+
+        response = openai_client.responses.create(
+                    model="gpt-4o-mini",
+                    tools=[
+                        {
+                            "type": "web_search_preview"
+                        }
+                    ],
+            input=search_query
+        )
+
+        context = response.output_text
+
+        sources = [
+            {
+                "source": "OpenAI Web Search",
+                "content": context
+            }
+        ]
+
+        return context, sources
+
+
+def prescription_agent(state):
+
+    question = state["question"]
+    
+    context, sources = web_search(question)
 
     if not context:
+
         state["prescription_info"] = (
             "No medication information could be retrieved. "
-            "Please try again or consult a healthcare professional."
+            "Please try again later"
         )
-        state["prescription_sources"] = []
-        return state
 
-    # --------------------------------------------------
-    # Extract medication information
-    # --------------------------------------------------
+        state["prescription_sources"] = []
+
+        return state
 
     prompt = f"""
 You are a medication information assistant.
@@ -117,13 +144,7 @@ The answer should be clear and patient-friendly.
 
     response = llm.invoke(prompt)
 
-    # --------------------------------------------------
-    # Save results for the conversational agent
-    # --------------------------------------------------
-
     state["prescription_info"] = response.content
-
-    # Keep the sources as well
-    state["prescription_sources"] = results
+    state["prescription_sources"] = sources
 
     return state
