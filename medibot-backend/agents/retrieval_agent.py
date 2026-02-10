@@ -10,6 +10,8 @@ def set_vectorstore(vs):
 
 def retrieval_agent(state):
 
+    print(f"\n\nretrieval\n\n")
+
     if vectorstore is None:
         state["documents"] = []
         return state
@@ -23,5 +25,7 @@ def retrieval_agent(state):
     )
 
     state["documents"] = documents
+
+    # print(f"\n\n{documents}\n\n")
 
     return state
