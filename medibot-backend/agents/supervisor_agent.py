@@ -16,6 +16,8 @@ llm = ChatOpenAI(
 
 def supervisor_agent(state):
 
+    print(f"\n\nsupervising agent\n\n")
+
     # Build an optional context hint so the supervisor knows what
     # material has already been provided alongside the question.
     context_hints = []
