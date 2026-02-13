@@ -16,14 +16,17 @@ from agents.retrieval_agent import set_vectorstore
 from graph import graph
 
 CHROMA_DIR = "chroma_db"
-EMBEDDING = OpenAIEmbeddings(model="text-embedding-3-small")
+COLLECTION_NAME = "medical_knowledge"
 
-# Cache the Chroma instance in session_state so it is created only once,
-# but always re-register it with the retrieval agent global on every rerun.
+EMBEDDING = OpenAIEmbeddings(
+    model="text-embedding-3-small"
+)
+
 if "vectorstore" not in st.session_state:
     st.session_state["vectorstore"] = Chroma(
         persist_directory=CHROMA_DIR,
-        embedding_function=EMBEDDING
+        collection_name=COLLECTION_NAME,
+        embedding_function=EMBEDDING,
     )
 
 vs = st.session_state["vectorstore"]
@@ -68,7 +71,6 @@ if q:
         }
     )
 
-    st.write("Rewritten Question:", result["question"])
     st.write("Retrieved Chunks:", len(result["documents"]))
 
     st.subheader("Answer")
