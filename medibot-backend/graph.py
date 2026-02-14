@@ -8,7 +8,8 @@ from agents.prescription_agent import prescription_agent
 from agents.disease_agent import disease_agent
 from agents.report_agent import report_agent
 from agents.conversational_agent import conversational_agent
-from agents.judge_agent import judge_agent
+# from agents.judge_agent import judge_agent
+from agents.evaluation_agent import evaluation_agent
 
 
 # --------------------------------------------------
@@ -84,9 +85,14 @@ builder.add_node(
 )
 
 builder.add_node(
-    "judge",
-    judge_agent
+    "evaluation",
+    evaluation_agent
 )
+
+# builder.add_node(
+#     "judge",
+#     judge_agent
+# )
 
 
 # --------------------------------------------------
@@ -144,35 +150,44 @@ builder.add_edge(
     "conversation"
 )
 
+builder.add_edge(
+    "conversation",
+    "evaluation"
+)
+
+builder.add_edge(
+    "evaluation",
+    END
+)
 
 # --------------------------------------------------
 # Conversation → judge
 # --------------------------------------------------
 
-builder.add_edge(
-    "conversation",
-    "judge"
-)
+# builder.add_edge(
+#     "conversation",
+#     "judge"
+# )
 
 
 # --------------------------------------------------
 # Judge routing
 # --------------------------------------------------
 
-def route_judge(state):
-    if state.get("judge_verdict") == "block":
-        return "block"
-    return "end"
+# def route_judge(state):
+#     if state.get("judge_verdict") == "block":
+#         return "block"
+#     return "end"
 
 
-builder.add_conditional_edges(
-    "judge",
-    route_judge,
-    {
-        "end": END,
-        "block": END
-    }
-)
+# builder.add_conditional_edges(
+#     "judge",
+#     route_judge,
+#     {
+#         "end": END,
+#         "block": END
+#     }
+# )
 
 
 # --------------------------------------------------
