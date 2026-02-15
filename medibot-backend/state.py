@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, Dict, Optional, TypedDict
 
 
 class HealthcareState(TypedDict, total=False):
@@ -67,3 +67,5 @@ class HealthcareState(TypedDict, total=False):
     # --------------------------------
 
     sources: list
+
+    evaluation: Optional[Dict[str, Any]]
