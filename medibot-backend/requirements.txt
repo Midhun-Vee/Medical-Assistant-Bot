@@ -8,3 +8,4 @@ langchain-chroma
 python-dotenv
 chromadb
 streamlit
+ragas
