@@ -61,7 +61,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="flex items-center justify-between">
+    <nav className="flex w-full h-16 items-center justify-between px-4 border border-primary">
       <div className="flex items-center">
         <Link
           href="/"
@@ -77,10 +77,10 @@ const Navbar = () => {
         </Link>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 mr-10">
         <Link
           href="/"
-          className="text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+          className="text-medium font-medium text-black transition-colors hover:text-blue-600"
         >
           Chat
         </Link>
@@ -88,14 +88,12 @@ const Navbar = () => {
         {hasEvaluation && (
           <Link
             href="/evaluations"
-            className="text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+            className="text-medium font-medium text-black transition-colors hover:text-blue-600"
           >
             Evaluation
           </Link>
         )}
       </div>
-
-      <div className="w-[150px]" />
     </nav>
   );
 };
