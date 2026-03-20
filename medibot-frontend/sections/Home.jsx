@@ -170,7 +170,7 @@ export default function Home() {
 
   if (!hasStartedChat) {
     return (
-      <section className="flex min-h-full flex-1 flex-col">
+      <section className="flex h-[85vh] flex-1 flex-col">
         <div className="flex flex-1 flex-col items-center justify-center">
           <h1 className="mt-12 text-center text-4xl font-bold text-primary">
             Welcome to MediAssist Clinical AI
@@ -231,7 +231,7 @@ export default function Home() {
   }
 
   return (
-    <section className="flex min-h-full flex-1">
+    <section className="flex h-[85vh] flex-1">
       <ChatHistory
         chats={chats}
         activeChatId={activeChatId}
