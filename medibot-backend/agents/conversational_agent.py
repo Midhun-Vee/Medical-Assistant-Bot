@@ -1,22 +1,15 @@
 from langchain_openai import ChatOpenAI
-
 from langchain_classic.chains import ConversationChain
 from langchain_classic.memory import ConversationSummaryBufferMemory
-
 from langchain_core.prompts import PromptTemplate
-
 
 chains = {}
 
-
 llm = ChatOpenAI(
     model="gpt-4o-mini",
-    temperature=0
+    temperature=0,
 )
 
-
-# ConversationChain only allows {history} and {input} in the prompt.
-# Context is embedded directly into {input} at call time.
 prompt = PromptTemplate.from_template(
     """
 You are a knowledgeable healthcare assistant. Give clear, direct, and complete answers.
@@ -33,6 +26,8 @@ Conversation history:
 
 {history}
 
+Current information and user question:
+
 {input}
 
 Answer:
@@ -41,68 +36,79 @@ Answer:
 
 
 def get_chain(chat_id):
-
     if chat_id not in chains:
-
         memory = ConversationSummaryBufferMemory(
             llm=llm,
             max_token_limit=1000,
             memory_key="history",
-            return_messages=False
+            return_messages=False,
         )
 
         chains[chat_id] = ConversationChain(
             llm=llm,
             memory=memory,
-            prompt=prompt
+            prompt=prompt,
         )
 
     return chains[chat_id]
 
 
 def conversational_agent(state):
+    print("\n\nconversational\n\n")
 
-    print(f"\n\nconversational\n\n")
+    chain = get_chain(state["chat_id"])
 
-    chain = get_chain(
-        state["chat_id"]
-    )
-
-    context = ""
+    context_parts = []
 
     if state.get("documents"):
-
-        context += "\nMedical knowledge:\n"
-
-        context += "\n\n".join(
-            doc.page_content
-            for doc in state["documents"]
+        context_parts.append(
+            "Medical knowledge:\n"
+            + "\n\n".join(
+                doc.page_content
+                for doc in state["documents"]
+            )
         )
 
     if state.get("prescription_info"):
-
-        context += "\nPrescription information:\n"
-        context += state["prescription_info"]
+        context_parts.append(
+            "Prescription information:\n"
+            + state["prescription_info"]
+        )
 
     if state.get("disease_analysis"):
-
-        context += "\nDisease analysis:\n"
-        context += state["disease_analysis"]
+        context_parts.append(
+            "Disease analysis:\n"
+            + state["disease_analysis"]
+        )
 
     if state.get("report_summary"):
+        context_parts.append(
+            "Report summary:\n"
+            + state["report_summary"]
+        )
 
-        context += "\nReport summary:\n"
-        context += state["report_summary"]
+    context = "\n\n".join(context_parts)
 
-    # Embed context into input so ConversationChain sees only {history} + {input}
     if context:
         combined_input = (
-            f"Specialist information:\n{context}\n\nUser question:\n{state['question']}"
+            f"Specialist information:\n\n"
+            f"{context}\n\n"
+            f"User question:\n"
+            f"{state['question']}\n\n"
+            f"Answer in {state['language']} language."
         )
     else:
-        combined_input = state["question"]
+        combined_input = (
+            f"User question:\n"
+            f"{state['question']}\n\n"
+            f"Answer in {state['language']} language."
+        )
 
-    response = chain.invoke({"input": combined_input})
+    response = chain.invoke(
+        {
+            "input": combined_input,
+        }
+    )
 
     state["answer"] = (
         response.get("response")
