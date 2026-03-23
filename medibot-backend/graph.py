@@ -8,190 +8,163 @@ from agents.prescription_agent import prescription_agent
 from agents.disease_agent import disease_agent
 from agents.report_agent import report_agent
 from agents.conversational_agent import conversational_agent
-# from agents.judge_agent import judge_agent
-from agents.evaluation_agent import evaluation_agent
 
+def route_after_supervisor(
+    state: HealthcareState,
+):
+    route = state.get("route")
 
-# --------------------------------------------------
-# Routing
-# --------------------------------------------------
+    print(
+        f"[ROUTER] supervisor route = {route}"
+    )
 
-def route_agent(state):
-
-    route = state["route"]
+    if route == "out_of_context":
+        return "out_of_context"
 
     if route == "retrieval":
         return "retrieval"
 
-    elif route == "prescription":
-        return "prescription"
+    if route == "prescription":
+        return "retrieval"
 
-    elif route == "disease":
-        return "disease"
+    if route == "disease":
+        return "retrieval"
 
-    elif route == "report":
+    if route == "report":
         return "report"
 
-    return "retrieval"
+    return "out_of_context"
 
 
-def route_after_retrieval(state):
-    """After retrieval, go to disease_agent if that was the intended route,
-    otherwise go straight to conversation."""
-    if state.get("route") == "disease":
+def route_after_retrieval(
+    state: HealthcareState,
+):
+    retrieval_relevant = state.get(
+        "retrieval_relevant",
+        False,
+    )
+
+    print(
+        f"[ROUTER] retrieval_relevant = "
+        f"{retrieval_relevant}"
+    )
+
+    if not retrieval_relevant:
+        return "no_context"
+
+    route = state.get("route")
+
+    if route == "prescription":
+        return "prescription"
+
+    if route == "disease":
         return "disease"
+
     return "conversation"
 
 
-# --------------------------------------------------
-# Build graph
-# --------------------------------------------------
+def no_context_agent(
+    state: HealthcareState,
+):
+    print("[NO_CONTEXT]")
 
-builder = StateGraph(HealthcareState)
+    state["answer"] = (
+        "I couldn't find sufficiently relevant "
+        "information in the available medical "
+        "context to answer this question reliably."
+    )
+
+    return state
 
 
-# --------------------------------------------------
-# Add agents
-# --------------------------------------------------
+builder = StateGraph(
+    HealthcareState
+)
 
 builder.add_node(
     "supervisor",
-    supervisor_agent
+    supervisor_agent,
 )
 
 builder.add_node(
     "retrieval",
-    retrieval_agent
+    retrieval_agent,
 )
 
 builder.add_node(
     "prescription",
-    prescription_agent
+    prescription_agent,
 )
 
 builder.add_node(
     "disease",
-    disease_agent
+    disease_agent,
 )
 
 builder.add_node(
     "report",
-    report_agent
+    report_agent,
 )
 
 builder.add_node(
     "conversation",
-    conversational_agent
+    conversational_agent,
 )
 
 builder.add_node(
-    "evaluation",
-    evaluation_agent
+    "no_context",
+    no_context_agent,
 )
-
-# builder.add_node(
-#     "judge",
-#     judge_agent
-# )
-
-
-# --------------------------------------------------
-# Starting point
-# --------------------------------------------------
 
 builder.set_entry_point(
     "supervisor"
 )
 
-
-# --------------------------------------------------
-# Supervisor routing
-# --------------------------------------------------
-
 builder.add_conditional_edges(
     "supervisor",
-
-    route_agent,
-
+    route_after_supervisor,
     {
+        "out_of_context": END,
         "retrieval": "retrieval",
         "prescription": "prescription",
-        "disease": "retrieval",  # disease fetches RAG context first
-        "report": "report"
-    }
+        "disease": "retrieval",
+        "report": "report",
+    },
 )
-
-
-# --------------------------------------------------
-# Specialist agents → conversation
-# --------------------------------------------------
 
 builder.add_conditional_edges(
     "retrieval",
     route_after_retrieval,
     {
+        "no_context": "no_context",
+        "prescription": "prescription",
         "disease": "disease",
-        "conversation": "conversation"
-    }
+        "conversation": "conversation",
+    },
+)
+builder.add_edge(
+    "no_context",
+    END,
 )
 
 builder.add_edge(
     "prescription",
-    "conversation"
+    "conversation",
 )
 
 builder.add_edge(
     "disease",
-    "conversation"
+    "conversation",
 )
 
 builder.add_edge(
     "report",
-    "conversation"
+    "conversation",
 )
 
 builder.add_edge(
     "conversation",
-    "evaluation"
+    END,
 )
-
-builder.add_edge(
-    "evaluation",
-    END
-)
-
-# --------------------------------------------------
-# Conversation → judge
-# --------------------------------------------------
-
-# builder.add_edge(
-#     "conversation",
-#     "judge"
-# )
-
-
-# --------------------------------------------------
-# Judge routing
-# --------------------------------------------------
-
-# def route_judge(state):
-#     if state.get("judge_verdict") == "block":
-#         return "block"
-#     return "end"
-
-
-# builder.add_conditional_edges(
-#     "judge",
-#     route_judge,
-#     {
-#         "end": END,
-#         "block": END
-#     }
-# )
-
-
-# --------------------------------------------------
-# Compile
-# --------------------------------------------------
 
 graph = builder.compile()
