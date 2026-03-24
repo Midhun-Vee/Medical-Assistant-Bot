@@ -58,7 +58,7 @@ def has_banned_words(query: str) -> bool:
 
 def check_input(query: str) -> dict:
     """
-    Returns {"blocked": False, "cleaned_query": ...} if safe,
+    Returns {"blocked": False, "query": ...} if safe,
     or {"blocked": True, "reason": ...} if not.
     """
 
@@ -76,4 +76,4 @@ def check_input(query: str) -> dict:
 
     cleaned = mask_pii(query)
 
-    return {"blocked": False, "cleaned_query": cleaned}
+    return {"blocked": False, "query": cleaned}
