@@ -9,3 +9,16 @@ python-dotenv
 chromadb
 streamlit
 ragas
+uvicorn
+unsloth
+datasets
+transformers
+trl
+torch
+peft
+accelerate
+bitsandbytes
+sarvamai
+pymupdf
+fastapi["standalone"]
+easyocr
