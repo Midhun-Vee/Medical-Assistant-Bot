@@ -1,71 +1,24 @@
 from typing import Any, Dict, Optional, TypedDict
 
-
 class HealthcareState(TypedDict, total=False):
-
-    # --------------------------------
-    # Chat
-    # --------------------------------
 
     chat_id: str
     question: str
+    language: str
 
-    # --------------------------------
-    # Routing
-    # --------------------------------
+    question_query: str
 
     route: str
 
-    # --------------------------------
-    # Uploaded documents
-    # --------------------------------
-
-    uploaded_files: list
-    report_text: str
-
-    # --------------------------------
-    # RAG
-    # --------------------------------
+    history: list
 
     documents: list
 
-    # --------------------------------
-    # Prescription
-    # --------------------------------
-
     prescription_info: str
-    prescription_sources: list
-
-    # --------------------------------
-    # Disease analysis
-    # --------------------------------
-
     disease_analysis: str
-
-    # --------------------------------
-    # Report analysis
-    # --------------------------------
-
     report_summary: str
-
-    # --------------------------------
-    # Final response
-    # --------------------------------
 
     answer: str
 
-    # --------------------------------
-    # Judge
-    # --------------------------------
-
-    judge_verdict: str
-    judge_block_reason: str
-    ground_truth: str
-
-    # --------------------------------
-    # Sources
-    # --------------------------------
-
-    sources: list
-
-    evaluation: Optional[Dict[str, Any]]
+    retrieval_relevant: bool
+    retrieval_score: float
