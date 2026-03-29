@@ -34,10 +34,17 @@ MediAssist-Backend/
 
 ### pending
 
-[] guardrails
-[] sarvamai
+[x] guardrails
+
+[x] sarvamai
+
 [] fallback
+
 [] pdf check
-[] image upload text extract
-[] prompt optimization
+
+[-] image upload text extract
+
+[x] prompt optimization
+
+
 [] adding more data
