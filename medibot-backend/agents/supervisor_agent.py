@@ -1,111 +1,86 @@
-from typing import Literal
+import json
 
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
-
-OUT_OF_CONTEXT_ANSWER = (
-    "I'm sorry, I can only assist with medical and healthcare-related questions. "
-    "Please ask something related to symptoms, medications, lab reports, or general health."
-)
-
-
-class Route(BaseModel):
-    route: Literal["retrieval", "prescription", "disease", "report", "out_of_context"]
 
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
-    temperature=0
-).with_structured_output(Route)
-
+    temperature=0,
+)
 
 def supervisor_agent(state):
+    print("[SUPERVISOR]")
 
-    print(f"\n\nsupervising agent\n\n")
+    question = state.get("question", "")
+    history = state.get("history", [])
 
-    # Build an optional context hint so the supervisor knows what
-    # material has already been provided alongside the question.
-    context_hints = []
-
-    if state.get("report_text"):
-        context_hints.append(
-            "The user has uploaded a medical report / lab results PDF."
-        )
-
-    if state.get("prescription_info"):
-        context_hints.append(
-            "The user has uploaded a prescription or medication PDF."
-        )
-
-    if state.get("documents"):
-        context_hints.append(
-            "A PDF has been loaded into the semantic search index."
-        )
-
-    context_section = (
-        "\nAdditional context:\n" + "\n".join(f"- {h}" for h in context_hints)
-        if context_hints
-        else ""
+    history_text = "\n".join(
+        f"{message['role']}: {message['content']}"
+        for message in history[-10:]
     )
 
     prompt = f"""
-You are the router for a healthcare chatbot.
+You are a medical AI supervisor.
 
-Choose the most appropriate route based on the user's question
-and the additional context below (if any).
+Determine the route for the current question and rewrite
+the question into a standalone question when it depends
+on previous conversation.
 
-Available routes:
+Conversation history:
+{history_text}
 
-retrieval
-- general medical questions
-- medical knowledge
-- guidelines
-- treatments
-- questions about a PDF loaded for semantic search
+Current question:
+{question}
 
-prescription
-- medicines
-- dosage
-- side effects
-- drug interactions
-- questions about an uploaded prescription PDF
+Routes:
 
-disease
-- symptoms
-- possible diseases
-- disease analysis
+prescription:
+medicines, prescriptions, dosage, medication uses,
+side effects, interactions, treatment instructions
 
-report
-- uploaded medical reports
-- lab reports
-- discharge summaries
-- questions about an uploaded medical report PDF
+disease:
+diseases, symptoms, conditions, diagnosis
 
-out_of_context
-- anything unrelated to healthcare or medicine
-- general knowledge questions (history, science, technology, entertainment, etc.)
-- coding or software questions
-- personal advice unrelated to health
-- any question a healthcare chatbot should not answer
-{context_section}
+report:
+lab reports, medical reports, test results
 
-Question:
+retrieval:
+general medical knowledge requiring retrieval
 
-{state["question"]}
+out_of_context:
+non-medical questions
+
+Important:
+The current question may contain references such as:
+"they", "them", "these medicines", "this medicine",
+"it", "this report", "those", etc.
+
+Use the conversation history to resolve these references.
+
+Return JSON only:
+
+{{
+    "route": "prescription|disease|report|retrieval|out_of_context",
+    "retrieval_question": "standalone medical question"
+}}
 """
 
     response = llm.invoke(prompt)
 
-    route = (
-        response.route
-        if isinstance(response, Route)
-        else response["route"]
+    data = json.loads(response.content)
+
+    state["route"] = data["route"]
+    state["retrieval_question"] = data[
+        "retrieval_question"
+    ]
+
+    print(
+        f"[SUPERVISOR] route={state['route']}"
     )
 
-    state["route"] = route
-
-    if route == "out_of_context":
-        print(f"\n\nout-of-context query — stopping early\n\n")
-        state["answer"] = OUT_OF_CONTEXT_ANSWER
+    print(
+        f"[SUPERVISOR] retrieval_question="
+        f"{state['retrieval_question']}"
+    )
 
     return state
