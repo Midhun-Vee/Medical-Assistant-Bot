@@ -1,0 +1,34 @@
+# Python virtual environments
+env/
+.venv/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+
+# Datasets
+preprocessing/datasets/
+datasets_pmc.zip
+
+# Local database/vector store
+chroma_db/
+
+# Git
+.git/
+.gitignore
+
+# Test/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE/editor
+.vscode/
+.idea/
