@@ -14,51 +14,37 @@ const Navbar = () => {
   const [hasEvaluation, setHasEvaluation] = useState(false);
 
   useEffect(() => {
-    const checkEvaluations = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/evaluations`
-        );
+  const checkEvaluations = async () => {
+    try {
+      const response = await fetch(`${API_URL}/evaluations`, {
+        cache: "no-store",
+      });
 
-        if (!response.ok) {
-          setHasEvaluation(false);
-          return;
-        }
-
-        const data = await response.json();
-
-        setHasEvaluation(
-          Array.isArray(data.evaluations) &&
-            data.evaluations.length > 0
-        );
-      } catch (error) {
-        console.error(
-          "Failed to check evaluations:",
-          error
-        );
-
+      if (!response.ok) {
         setHasEvaluation(false);
+        return;
       }
-    };
 
-    checkEvaluations();
+      const data = await response.json();
 
-    const updateEvaluation = () => {
-      checkEvaluations();
-    };
+      console.log("Evaluations:", data);
 
-    window.addEventListener(
-      "evaluation-created",
-      updateEvaluation
-    );
-
-    return () => {
-      window.removeEventListener(
-        "evaluation-created",
-        updateEvaluation
+      setHasEvaluation(
+        Array.isArray(data.evaluations) &&
+        data.evaluations.length > 0
       );
-    };
-  }, []);
+    } catch (error) {
+      console.error("Failed to check evaluations:", error);
+      setHasEvaluation(false);
+    }
+  };
+
+  checkEvaluations();
+
+  const interval = setInterval(checkEvaluations, 2000);
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <nav className="flex w-full h-16 items-center justify-between px-4 border border-primary">
