@@ -18,7 +18,7 @@ def retrieval_agent(state):
     print("[RETRIEVAL]")
 
     question = state.get(
-        "retrieval_question",
+        "question_query",
         state.get("question", ""),
     )
 
