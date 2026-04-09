@@ -61,7 +61,7 @@ Return JSON only:
 
 {{
     "route": "prescription|disease|report|retrieval|out_of_context",
-    "retrieval_question": "standalone medical question"
+    "question_query": "standalone medical question"
 }}
 """
 
@@ -70,8 +70,8 @@ Return JSON only:
     data = json.loads(response.content)
 
     state["route"] = data["route"]
-    state["retrieval_question"] = data[
-        "retrieval_question"
+    state["question_query"] = data[
+        "question_query"
     ]
 
     print(
@@ -79,8 +79,8 @@ Return JSON only:
     )
 
     print(
-        f"[SUPERVISOR] retrieval_question="
-        f"{state['retrieval_question']}"
+        f"[SUPERVISOR] question_query="
+        f"{state['question_query']}"
     )
 
     return state
