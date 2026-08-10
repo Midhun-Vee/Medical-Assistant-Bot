@@ -1,0 +1,6 @@
+datasets_pmc
+__pycache__
+.env
+chroma_db
+csv_datasets
+datasets_pmc.zip
