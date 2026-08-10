@@ -1,0 +1,18 @@
+# folders
+
+# datasets
+datasets
+
+# others
+__pycache__
+env
+.venv
+
+# files
+.env
+
+chroma_db 
+
+chroma_db_3
+csv_datasets
+
