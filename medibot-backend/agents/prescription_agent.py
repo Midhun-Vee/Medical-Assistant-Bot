@@ -48,7 +48,7 @@ def web_search(question):
         context = "\n\n".join(
                     result.get("content", "")
                     for result in results
-                    if result.get("content")
+                    if isinstance(result, dict) and result.get("content")
                 )
         
         return context, results
@@ -96,10 +96,7 @@ def prescription_agent(state):
         return state
 
     prompt = f"""
-You are a medication information assistant.
-
-Answer the user's medication question using ONLY
-the web information provided below.
+You are a medication information assistant. Give clear, direct, and complete answers about medications.
 
 WEB SEARCH RESULTS:
 
@@ -109,37 +106,27 @@ USER QUESTION:
 
 {question}
 
-Provide:
+First, check whether the question is specific enough to give safe, accurate medication guidance:
+- If the medicine name is missing or ambiguous, ask the patient to clarify which medication they mean.
+- If the question involves dosage but no patient context is given (e.g. age, weight, indication, renal function), note the standard adult dose and ask for any relevant details that would affect the recommendation.
+- Do not ask more than 2 clarifying questions at once.
 
-1. Medicine name
-2. Generic name
-3. What it is used for
-4. Standard labeled dosage information
-5. How often it is normally taken
-6. How it should be taken
-7. Common side effects
-8. Important warnings
-9. Important drug interactions
-10. Source information
+When you have sufficient information, provide the following directly and specifically:
 
-IMPORTANT DOSAGE RULES:
+1. Medicine name and generic name
+2. What it is used for (indications)
+3. Standard dosage — state the actual dose, frequency, and route as found in the sources
+4. How it should be taken (with food, timing, etc.)
+5. Common side effects
+6. Important warnings and contraindications
+7. Notable drug interactions
+8. Sources
 
-- Only provide a dosage if it is explicitly supported
-  by the retrieved sources.
-- Do NOT calculate or invent a dose.
-- Do NOT recommend a personalized dose.
-- If dosage depends on age, weight, kidney function,
-  liver function, indication, pregnancy, or another
-  clinical factor, explicitly state that.
-- Distinguish adult and pediatric dosing.
-- If multiple indications have different doses,
-  clearly separate them.
-- Never tell the patient to start, stop, increase,
-  or decrease a prescription medicine.
-- If the sources disagree, say so.
-- Prefer official drug labeling over general websites.
-
-The answer should be clear and patient-friendly.
+Dosage guidance:
+- State the specific dose figures from the sources (e.g. "500 mg twice daily").
+- When dosage differs by indication, age group, or renal/hepatic function, list each variant clearly.
+- If the sources provide a dose range, give the full range.
+- Only omit a dosage if the sources contain none at all.
 """
 
     response = llm.invoke(prompt)
