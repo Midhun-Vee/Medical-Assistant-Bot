@@ -3,9 +3,14 @@ from typing import Literal
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 
+OUT_OF_CONTEXT_ANSWER = (
+    "I'm sorry, I can only assist with medical and healthcare-related questions. "
+    "Please ask something related to symptoms, medications, lab reports, or general health."
+)
+
 
 class Route(BaseModel):
-    route: Literal["retrieval", "prescription", "disease", "report"]
+    route: Literal["retrieval", "prescription", "disease", "report", "out_of_context"]
 
 
 llm = ChatOpenAI(
@@ -75,6 +80,13 @@ report
 - lab reports
 - discharge summaries
 - questions about an uploaded medical report PDF
+
+out_of_context
+- anything unrelated to healthcare or medicine
+- general knowledge questions (history, science, technology, entertainment, etc.)
+- coding or software questions
+- personal advice unrelated to health
+- any question a healthcare chatbot should not answer
 {context_section}
 
 Question:
@@ -84,10 +96,16 @@ Question:
 
     response = llm.invoke(prompt)
 
-    state["route"] = (
+    route = (
         response.route
         if isinstance(response, Route)
         else response["route"]
     )
+
+    state["route"] = route
+
+    if route == "out_of_context":
+        print(f"\n\nout-of-context query — stopping early\n\n")
+        state["answer"] = OUT_OF_CONTEXT_ANSWER
 
     return state
